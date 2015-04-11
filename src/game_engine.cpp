@@ -1,0 +1,48 @@
+/*
+Copyright © 2014-2015 Justin Jacobs
+
+This file is part of GAME_TITLE.
+
+GAME_TITLE is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+GAME_TITLE is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+GAME_TITLE.  If not, see http://www.gnu.org/licenses/
+*/
+
+
+#include "game_engine.h"
+#include "engines.h"
+#include "utils.h"
+
+GameEngine::GameEngine()
+    : done(false)
+{
+}
+
+GameEngine::~GameEngine() {
+}
+
+void GameEngine::logic() {
+    // exit game
+    if (input_engine->pressing[EXIT]) {
+        done = true;
+        return;
+    }
+
+    // toggle fullscreen
+    if (input_engine->pressing[FULLSCREEN_TOGGLE] && !input_engine->lock[FULLSCREEN_TOGGLE]) {
+        input_engine->lock[FULLSCREEN_TOGGLE] = true;
+        render_engine->toggleFullscreen();
+    }
+
+    // game logic goes here
+}
+
+void GameEngine::render() {
+}

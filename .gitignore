@@ -1,0 +1,30 @@
+game
+game.exe
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+install_manifest.txt
+# ignore also vim swap files
+.*.sw*
+
+# ignore copy-on-write backup files
+*~
+
+# performance and benchmarking items
+perf.data
+gmon.out
+
+# ignore gimp source files in data dir
+data/*.xcf
+
+# Android
+/pkg/android/bin/
+/pkg/android/jni/SDL2/
+/pkg/android/jni/SDL2_image/
+/pkg/android/jni/SDL2_mixer/
+/pkg/android/jni/SDL2_ttf/
+/pkg/android/libs/
+/pkg/android/obj/
+/pkg/android/gen/
+
