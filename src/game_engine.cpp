@@ -104,7 +104,11 @@ void GameEngine::init() {
         }
     }
 
-    active_player = 0;
+    active_player = 2;
+    hand_selected = -1;
+
+    played_piles.clear();
+    played_piles.resize(15);
 
     // create draw pile
     discard_piles.resize(15);
@@ -122,19 +126,38 @@ void GameEngine::init() {
         }
 
         drawCards(i);
-
-        // for (unsigned j=0; j<players[i].hand.size(); ++j) {
-        //     if (players[i].hand[j] == 1) {
-        //         active_player = i;
-        //         break;
-        //     }
-        // }
     }
 
-    played_piles.clear();
-    played_piles.resize(15);
+    // check who goes first
+    for (unsigned i=0; i<players.size(); ++i) {
+        if (players[i].flinch_pile.top() == 1) {
+            active_player = i;
+            playFlinch(i);
+            break;
+        }
+    }
+    if (active_player == 2) {
+        for (unsigned i=0; i<players.size(); ++i) {
+            for (unsigned j=0; j<players[i].hand.size(); ++j) {
+                if (players[i].hand[j] == 1) {
+                    active_player = i;
+                    playHand(i, j);
+                    break;
+                }
+            }
+            if (active_player != 2)
+                break;
+        }
+    }
+    // neither players has a 1
+    if (active_player == 2) {
+        for (unsigned i=0; i<5; ++i) {
+            reserveHand(0, i, i);
+            reserveHand(1, i, i);
+        }
+        active_player = 0;
+    }
 
-    hand_selected = -1;
 }
 
 void GameEngine::drawCards(unsigned player_id) {
@@ -176,9 +199,7 @@ void GameEngine::checkClickHand() {
         // reserve the selected card on a specific slot
         for (unsigned i=0; i<5; ++i) {
             if (isWithin(players[0].reserve_pos[i], input_engine->mouse)) {
-                if (canReserve(0, i)) {
-                    players[0].reserve_piles[i].push(players[0].hand[hand_selected]);
-                    players[0].hand.erase(players[0].hand.begin()+hand_selected);
+                if (reserveHand(0, hand_selected, i)) {
                     hand_selected = -1;
                     active_player = 1;
                     return;
@@ -187,15 +208,12 @@ void GameEngine::checkClickHand() {
         }
 
         // play the selected card
-        int can_play = canPlay(players[0].hand[hand_selected]);
-        if (can_play != -1) {
-            for (unsigned i=0; i<15; ++i) {
-                if (isWithin(played_pos[i], input_engine->mouse)) {
-                    played_piles[can_play].push(players[0].hand[hand_selected]);
-                    players[0].hand.erase(players[0].hand.begin()+hand_selected);
+        for (unsigned i=0; i<15; ++i) {
+            if (isWithin(played_pos[i], input_engine->mouse)) {
+                if (playHand(0, hand_selected)) {
                     hand_selected = -1;
-                    return;
                 }
+                return;
             }
         }
     }
@@ -206,12 +224,9 @@ void GameEngine::checkClickReserve() {
 
     // play the selected card
     for (unsigned i=0; i<5; ++i) {
-        if (isWithin(players[0].reserve_pos[i], input_engine->mouse) && !players[0].reserve_piles[i].empty()) {
-            int can_play = canPlay(players[0].reserve_piles[i].top());
-            if (can_play != -1) {
-                played_piles[can_play].push(players[0].reserve_piles[i].top());
-                players[0].reserve_piles[i].pop();
-            }
+        if (isWithin(players[0].reserve_pos[i], input_engine->mouse)) {
+            playReserve(0, i);
+            return;
         }
     }
 }
@@ -220,13 +235,9 @@ void GameEngine::checkClickFlinch() {
     if (isWithin(players[0].flinch_pos, input_engine->mouse)) {
         hand_selected = -1;
 
-        int can_play = canPlay(players[0].flinch_pile.top());
-        if (can_play != -1) {
-            played_piles[can_play].push(players[0].flinch_pile.top());
-            players[0].flinch_pile.pop();
-        }
+        if (playFlinch(0))
+            winnerCheck();
     }
-    winnerCheck();
 }
 
 bool GameEngine::canReserve(unsigned player_id, unsigned reserve_id) {
@@ -284,12 +295,8 @@ void GameEngine::createDrawPile() {
 }
 
 void GameEngine::AIPlayFlinch() {
-    int can_play = canPlay(players[1].flinch_pile.top());
-    if (can_play != -1) {
-        played_piles[can_play].push(players[1].flinch_pile.top());
-        players[1].flinch_pile.pop();
-    }
-    winnerCheck();
+    if (playFlinch(1))
+        winnerCheck();
 }
 
 void GameEngine::AIPlayReserve() {
@@ -297,30 +304,20 @@ void GameEngine::AIPlayReserve() {
         if (players[1].reserve_piles[i].empty())
             continue;
 
-        int can_play = canPlay(players[1].reserve_piles[i].top());
-        if (can_play != -1) {
-            played_piles[can_play].push(players[1].reserve_piles[i].top());
-            players[1].reserve_piles[i].pop();
+        if (playReserve(1, i))
             return;
-        }
     }
 }
 
 void GameEngine::AIPlayHand() {
     for (unsigned i=0; i<players[1].hand.size(); ++i) {
-        int can_play = canPlay(players[1].hand[i]);
-        if (can_play != -1) {
-            played_piles[can_play].push(players[1].hand[i]);
-            players[1].hand.erase(players[1].hand.begin()+i);
+        if (playHand(1, i))
             return;
-        }
     }
 
     for (unsigned i=0; i<players[1].hand.size(); ++i) {
         for (unsigned j=0; j<5; ++j) {
-            if (players[1].reserve_piles[j].empty()) {
-                players[1].reserve_piles[j].push(players[1].hand[i]);
-                players[1].hand.erase(players[1].hand.begin()+i);
+            if (players[1].reserve_piles[j].empty() && reserveHand(1, i, j)) {
                 active_player = 0;
                 return;
             }
@@ -329,14 +326,54 @@ void GameEngine::AIPlayHand() {
 
     for (unsigned i=0; i<players[1].hand.size(); ++i) {
         for (unsigned j=0; j<5; ++j) {
-            if (canReserve(1, j)) {
-                players[1].reserve_piles[j].push(players[1].hand[i]);
-                players[1].hand.erase(players[1].hand.begin()+i);
+            if (reserveHand(1, i, j)) {
                 active_player = 0;
                 return;
             }
         }
     }
+}
+
+bool GameEngine::playFlinch(unsigned player_id) {
+    int can_play = canPlay(players[player_id].flinch_pile.top());
+    if (can_play != -1) {
+        played_piles[can_play].push(players[player_id].flinch_pile.top());
+        players[player_id].flinch_pile.pop();
+        return true;
+    }
+    return false;
+}
+
+bool GameEngine::playReserve(unsigned player_id, unsigned reserve_id) {
+    if (players[player_id].reserve_piles[reserve_id].empty())
+        return false;
+
+    int can_play = canPlay(players[player_id].reserve_piles[reserve_id].top());
+    if (can_play != -1) {
+        played_piles[can_play].push(players[player_id].reserve_piles[reserve_id].top());
+        players[player_id].reserve_piles[reserve_id].pop();
+        return true;
+    }
+    return false;
+}
+
+bool GameEngine::playHand(unsigned player_id, unsigned hand_id) {
+    int can_play = canPlay(players[player_id].hand[hand_id]);
+    if (can_play != -1) {
+        played_piles[can_play].push(players[player_id].hand[hand_id]);
+        players[player_id].hand.erase(players[player_id].hand.begin()+hand_id);
+        return true;
+    }
+    return false;
+}
+
+bool GameEngine::reserveHand(unsigned player_id, unsigned hand_id, unsigned reserve_id) {
+    if (canReserve(player_id, reserve_id)) {
+        players[player_id].reserve_piles[reserve_id].push(players[player_id].hand[hand_id]);
+        players[player_id].hand.erase(players[player_id].hand.begin()+hand_id);
+        return true;
+    }
+    return false;
 }
 
 void GameEngine::winnerCheck() {

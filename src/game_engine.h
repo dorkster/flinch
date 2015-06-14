@@ -68,6 +68,11 @@ private:
 
     void winnerCheck();
 
+    bool playFlinch(unsigned player_id);
+    bool playReserve(unsigned player_id, unsigned reserve_id);
+    bool playHand(unsigned player_id, unsigned hand_id);
+    bool reserveHand(unsigned player_id, unsigned hand_id, unsigned reserve_id);
+
     Image img_cards;
 
     std::vector<Rect> played_pos;
