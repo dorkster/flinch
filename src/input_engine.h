@@ -21,7 +21,7 @@ GAME_TITLE.  If not, see http://www.gnu.org/licenses/
 #include "common.h"
 #include "utils.h"
 
-const int KEY_COUNT = 7;
+const int KEY_COUNT = 8;
 
 enum {
     ACTION = 0,
@@ -31,6 +31,7 @@ enum {
     UP = 4,
     DOWN = 5,
     FULLSCREEN_TOGGLE = 6,
+    NEW_GAME = 7
 };
 
 class InputEngine {

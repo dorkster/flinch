@@ -398,6 +398,11 @@ void GameEngine::logic() {
         render_engine->toggleFullscreen();
     }
 
+    if (input_engine->pressing[NEW_GAME] && !input_engine->lock[NEW_GAME]) {
+        input_engine->lock[NEW_GAME] = true;
+        init();
+    }
+
     // game logic goes here
 
     // game over

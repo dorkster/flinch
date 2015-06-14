@@ -35,6 +35,7 @@ InputEngine::InputEngine()
     binding[UP] = SDLK_w;
     binding[DOWN] = SDLK_s;
     binding[FULLSCREEN_TOGGLE] = SDLK_f;
+    binding[NEW_GAME] = SDLK_F10;
 }
 
 InputEngine::~InputEngine() {
