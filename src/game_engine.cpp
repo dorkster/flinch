@@ -328,12 +328,37 @@ void GameEngine::AIPlayHand() {
         }
     }
 
-    for (unsigned i=0; i<players[1].hand.size(); ++i) {
+    // try to reserve high-value cards first
+    bool have_empty_slots = false;
+    for (unsigned i=0; i<5; ++i) {
+        if (players[1].reserve_piles[i].empty()) {
+            have_empty_slots = true;
+            break;
+        }
+    }
+    for (unsigned i=players[1].hand.size(); i>0; --i) {
+        int target_slot = -1;
         for (unsigned j=0; j<5; ++j) {
-            if (reserveHand(1, i, j)) {
-                active_player = 0;
-                return;
+            if (have_empty_slots) {
+                if (players[1].reserve_piles[j].empty()) {
+                    target_slot = j;
+                    break;
+                }
             }
+            else {
+                if (players[1].hand[i] <= players[1].reserve_piles[j].top()) {
+                    target_slot = j;
+                    break;
+                }
+            }
+        }
+
+        if (target_slot == -1)
+            target_slot = 4;
+
+        if (reserveHand(1, i-1, target_slot)) {
+            active_player = 0;
+            return;
         }
     }
 }
