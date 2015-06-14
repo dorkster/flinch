@@ -90,6 +90,8 @@ GameEngine::~GameEngine() {
 }
 
 void GameEngine::init() {
+    winner = -1;
+
     if (players.empty())
         players.resize(2);
 
@@ -133,7 +135,6 @@ void GameEngine::init() {
     played_piles.resize(15);
 
     hand_selected = -1;
-    reserve_selected = -1;
 }
 
 void GameEngine::drawCards(unsigned player_id) {
@@ -218,7 +219,6 @@ void GameEngine::checkClickReserve() {
 void GameEngine::checkClickFlinch() {
     if (isWithin(players[0].flinch_pos, input_engine->mouse)) {
         hand_selected = -1;
-        reserve_selected = -1;
 
         int can_play = canPlay(players[0].flinch_pile.top());
         if (can_play != -1) {
@@ -226,6 +226,7 @@ void GameEngine::checkClickFlinch() {
             players[0].flinch_pile.pop();
         }
     }
+    winnerCheck();
 }
 
 bool GameEngine::canReserve(unsigned player_id, unsigned reserve_id) {
@@ -233,16 +234,16 @@ bool GameEngine::canReserve(unsigned player_id, unsigned reserve_id) {
 
     for (unsigned i=0; i<5; ++i) {
         if (players[player_id].reserve_piles[i].empty()) {
-            if (i == reserve_id)
-                return true;
-
             have_empty_slots = true;
         }
-        else {
-            if (have_empty_slots && !players[player_id].reserve_piles[i].empty())
-                return false;
-        }
     }
+
+    if (have_empty_slots && !players[player_id].reserve_piles[reserve_id].empty())
+        return false;
+    else if (have_empty_slots && players[player_id].reserve_piles[reserve_id].empty())
+        return true;
+    else if (!have_empty_slots)
+        return true;
 
     return true;
 }
@@ -288,6 +289,7 @@ void GameEngine::AIPlayFlinch() {
         played_piles[can_play].push(players[1].flinch_pile.top());
         players[1].flinch_pile.pop();
     }
+    winnerCheck();
 }
 
 void GameEngine::AIPlayReserve() {
@@ -337,6 +339,11 @@ void GameEngine::AIPlayHand() {
     }
 }
 
+void GameEngine::winnerCheck() {
+    if (players[active_player].flinch_pile.empty())
+        winner = active_player;
+}
+
 void GameEngine::logic() {
     // exit game
     if (input_engine->pressing[EXIT]) {
@@ -351,6 +358,11 @@ void GameEngine::logic() {
     }
 
     // game logic goes here
+
+    // game over
+    if (winner != -1)
+        return;
+
     if (active_player == 0) {
         if (players[0].hand.empty())
             drawCards(0);

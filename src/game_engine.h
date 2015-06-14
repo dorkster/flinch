@@ -66,12 +66,14 @@ private:
     void AIPlayReserve();
     void AIPlayHand();
 
+    void winnerCheck();
+
     Image img_cards;
 
     std::vector<Rect> played_pos;
 
     int hand_selected;
-    int reserve_selected;
+    int winner;
 
 public:
     GameEngine();
