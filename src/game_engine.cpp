@@ -152,8 +152,8 @@ void GameEngine::init() {
     // neither players has a 1
     if (active_player == 2) {
         for (unsigned i=0; i<5; ++i) {
-            reserveHand(0, i, i);
-            reserveHand(1, i, i);
+            reserveHand(0, 0, i);
+            reserveHand(1, 0, i);
         }
         active_player = 0;
     }
@@ -294,19 +294,23 @@ void GameEngine::createDrawPile() {
     discard_piles.resize(15);
 }
 
-void GameEngine::AIPlayFlinch() {
-    if (playFlinch(1))
+bool GameEngine::AIPlayFlinch() {
+    if (playFlinch(1)) {
         winnerCheck();
+        return true;
+    }
+    return false;
 }
 
-void GameEngine::AIPlayReserve() {
+bool GameEngine::AIPlayReserve() {
     for (unsigned i=0; i<5; ++i) {
         if (players[1].reserve_piles[i].empty())
             continue;
 
         if (playReserve(1, i))
-            return;
+            return true;
     }
+    return false;
 }
 
 void GameEngine::AIPlayHand() {
@@ -418,9 +422,8 @@ void GameEngine::logic() {
         if (players[1].hand.empty())
             drawCards(1);
 
-        AIPlayFlinch();
-        AIPlayReserve();
-        AIPlayHand();
+        if (!(AIPlayFlinch() || AIPlayReserve()))
+            AIPlayHand();
 
         clearCompleted();
     }

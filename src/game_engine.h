@@ -62,8 +62,8 @@ private:
     void checkClickReserve();
     void checkClickFlinch();
 
-    void AIPlayFlinch();
-    void AIPlayReserve();
+    bool AIPlayFlinch();
+    bool AIPlayReserve();
     void AIPlayHand();
 
     void winnerCheck();
