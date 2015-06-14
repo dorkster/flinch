@@ -36,11 +36,11 @@ RenderEngine::RenderEngine()
     fullscreen = false;
 #endif
 
-    VIEW_W = 224;
-    VIEW_H = 128;
+    VIEW_W = 640;
+    VIEW_H = 480;
 
-    int window_w = (int)(desktop.w / 1.5f /VIEW_W) * VIEW_W;
-    int window_h = (int)(desktop.h / 1.5f /VIEW_H) * VIEW_H;
+    int window_w = (float)(desktop.w / 1.5f /VIEW_W) * VIEW_W;
+    int window_h = (float)(desktop.h / 1.5f /VIEW_H) * VIEW_H;
 
     if (fullscreen) {
         window = SDL_CreateWindow("GAME_TITLE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -84,7 +84,7 @@ RenderEngine::~RenderEngine() {
 }
 
 void RenderEngine::clear() {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(renderer, 92, 113, 153, 255);
 	SDL_RenderClear(renderer);
 }
 
